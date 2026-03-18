@@ -7,23 +7,15 @@ import type { IconRegistry } from '@icon-shelf/core';
 
 interface SearchOptions {
   category?: string;
-  limit: string;
+  limit?: string;
 }
 
-export async function searchCommand(query: string, options: SearchOptions) {
-  const cwd = process.cwd();
-  const config = await loadConfig(cwd);
-  const registryPath = path.resolve(cwd, config.output.registry);
-
-  let registry: IconRegistry;
-  try {
-    const raw = await fs.readFile(registryPath, 'utf8');
-    registry = JSON.parse(raw);
-  } catch {
-    console.error(chalk.red('Registry not found. Run "icon-shelf scan" first.'));
-    process.exit(1);
-  }
-
+/** 레지스트리 객체를 직접 받아서 검색 (scan --search 파이프라인용) */
+export async function runSearch(
+  registry: IconRegistry,
+  query: string,
+  options: SearchOptions,
+) {
   let icons = registry.icons;
   if (options.category) {
     icons = icons.filter((i) => i.category === options.category);
@@ -49,7 +41,7 @@ export async function searchCommand(query: string, options: SearchOptions) {
     includeScore: true,
   });
 
-  const limit = parseInt(options.limit, 10) || 10;
+  const limit = parseInt(options.limit ?? '10', 10) || 10;
   const results = fuse.search(query, { limit });
 
   if (results.length === 0) {
@@ -72,4 +64,22 @@ export async function searchCommand(query: string, options: SearchOptions) {
     );
     console.log(chalk.dim(`    ${item.path}`));
   }
+}
+
+/** CLI 엔트리: 레지스트리 JSON 파일에서 로드 후 검색 */
+export async function searchCommand(query: string, options: SearchOptions) {
+  const cwd = process.cwd();
+  const config = await loadConfig(cwd);
+  const registryPath = path.resolve(cwd, config.output.registry);
+
+  let registry: IconRegistry;
+  try {
+    const raw = await fs.readFile(registryPath, 'utf8');
+    registry = JSON.parse(raw);
+  } catch {
+    console.error(chalk.red('Registry not found. Run "icon-shelf scan" first.'));
+    process.exit(1);
+  }
+
+  await runSearch(registry, query, options);
 }

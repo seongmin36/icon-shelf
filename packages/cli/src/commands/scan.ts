@@ -1,14 +1,16 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { loadConfig, scanFiles, generateRegistry, createWatcher } from '@icon-shelf/core';
+import type { IconRegistry } from '@icon-shelf/core';
 
 interface ScanOptions {
   watch?: boolean;
   cache?: boolean;
   verbose?: boolean;
+  search?: string;
 }
 
-export async function scanCommand(options: ScanOptions) {
+export async function scanCommand(options: ScanOptions): Promise<IconRegistry | null> {
   const cwd = process.cwd();
   const spinner = ora('Loading config...').start();
 
@@ -25,7 +27,7 @@ export async function scanCommand(options: ScanOptions) {
       spinner.warn('No icon files found');
       console.log(chalk.dim(`  Searched: ${config.include.join(', ')}`));
       console.log(chalk.dim(`  Extensions: ${config.extensions.join(', ')}`));
-      return;
+      return null;
     }
 
     spinner.text = `Parsing ${files.length} icons...`;
@@ -70,6 +72,13 @@ export async function scanCommand(options: ScanOptions) {
     console.log(chalk.dim(`  Registry: ${config.output.registry}`));
     console.log(chalk.dim(`  Scan: ${scanDurationMs.toFixed(0)}ms`));
 
+    // --search: scan 후 바로 검색
+    if (options.search) {
+      console.log();
+      const { runSearch } = await import('./search.js');
+      await runSearch(registry, options.search, {});
+    }
+
     // Watch mode
     if (options.watch) {
       console.log();
@@ -88,6 +97,8 @@ export async function scanCommand(options: ScanOptions) {
         },
       });
     }
+
+    return registry;
   } catch (err) {
     spinner.fail('Scan failed');
     console.error(chalk.red(err instanceof Error ? err.message : String(err)));

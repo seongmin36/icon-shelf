@@ -1,0 +1,28 @@
+{
+  "name": "@icon-shelf/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "icon-shelf": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@icon-shelf/core": "workspace:*",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.0",
+    "fuse.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "vitest": "^2.1.0",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

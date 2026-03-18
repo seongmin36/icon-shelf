@@ -1,0 +1,7 @@
+{
+  "name": "@icon-shelf/figma-adapter",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "Figma integration for Icon Shelf (Phase 5)"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@icon-shelf/core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.0",
+    "chokidar": "^4.0.0",
+    "xxhash-wasm": "^1.1.0",
+    "msgpackr": "^1.11.0",
+    "svg-parser": "^2.0.4",
+    "svgo": "^3.3.0",
+    "sharp": "^0.33.0",
+    "joycon": "^3.1.0",
+    "bundle-require": "^5.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "vitest": "^2.1.0",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

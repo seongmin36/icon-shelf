@@ -19,7 +19,6 @@
   "dependencies": {
     "fast-glob": "^3.3.0",
     "chokidar": "^4.0.0",
-    "xxhash-wasm": "^1.1.0",
     "msgpackr": "^1.11.0",
     "svg-parser": "^2.0.4",
     "svgo": "^3.3.0",

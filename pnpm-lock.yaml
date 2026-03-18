@@ -74,9 +74,6 @@ importers:
       svgo:
         specifier: ^3.3.0
         version: 3.3.3
-      xxhash-wasm:
-        specifier: ^1.1.0
-        version: 1.1.0
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -1338,9 +1335,6 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
-  xxhash-wasm@1.1.0:
-    resolution: {integrity: sha512-147y/6YNh+tlp6nd/2pWq38i9h6mz/EuQ6njIrmW8D1BS5nCqs0P6DG+m6zTGnNz5I+uhZ0SHxBs9BsPrwcKDA==}
-
 snapshots:
 
   '@emnapi/runtime@1.9.0':
@@ -2387,5 +2381,3 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  xxhash-wasm@1.1.0: {}

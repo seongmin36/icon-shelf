@@ -1,4 +1,4 @@
-# Icon Shelf 🎨
+# Icon Shelf
 
 > **프론트엔드 프로젝트를 위한 자동 아이콘 관리 도구**
 >
@@ -10,14 +10,14 @@
 
 ## 주요 기능
 
-- ✨ **자동 메타데이터 추출** - SVG viewBox, 색상, 애니메이션 자동 감지
-- ⚡ **극적 성능 향상** - 2단계 캐싱으로 재스캔 시간 10배 단축
-- 🔍 **강력한 검색** - 퍼지 검색으로 오타도 찾아냄
-- 🎯 **자동 카테고리화** - 폴더 구조 기반 자동 분류
-- 📋 **품질 검사** - 6가지 린트 규칙으로 SVG 품질 보증
-- 👀 **파일 감시** - --watch 모드로 변경사항 실시간 추적
-- 🗂️ **JSON 레지스트리** - 빌드 프로세스 통합 가능한 표준화된 포맷
-- 📦 **TypeScript 지원** - 완전한 타입 안전성
+- **자동 메타데이터 추출** - SVG viewBox, 색상, 애니메이션 자동 감지
+- **극적 성능 향상** - 2단계 캐싱으로 재스캔 시간 10배 단축
+- **강력한 검색** - 퍼지 검색으로 오타도 찾아냄
+- **자동 카테고리화** - 폴더 구조 기반 자동 분류
+- **품질 검사** - 6가지 린트 규칙으로 SVG 품질 보증
+- **파일 감시** - --watch 모드로 변경사항 실시간 추적
+- **JSON 레지스트리** - 빌드 프로세스 통합 가능한 표준화된 포맷
+- **TypeScript 지원** - 완전한 타입 안전성
 
 ## 설치
 
@@ -87,7 +87,7 @@ npx icon-shelf search "arrow"
 
 **출력 예시:**
 ```
-📋 Results (2/45):
+Results (2/45):
 
 1. arrowLeft
    Path: navigation/arrow-left.svg
@@ -283,7 +283,7 @@ npx icon-shelf scan --watch
 새로운 아이콘을 추가하면 자동으로 감지됩니다:
 
 ```
-[watch] 🆕 Added: navigation/menu-open.svg
+[watch] Added: navigation/menu-open.svg
 ✓ Updated icon-registry.json (10 icons)
 ```
 
@@ -318,7 +318,7 @@ jobs:
       - name: Check SVG quality
         run: |
           if grep -q '"rule":"has-viewbox"' src/__generated__/icon-registry.json; then
-            echo "❌ Error: Missing viewBox in SVG files"
+            echo "Error: Missing viewBox in SVG files"
             exit 1
           fi
           echo "✓ All SVG icons are valid"
@@ -516,26 +516,26 @@ npx icon-shelf scan --watch
 
 ### Phase 2 (예정)
 
-- 🔧 React/Vue 컴포넌트 자동 생성
-- 📝 TypeScript 인터페이스 생성
-- 🎨 CSS-in-JS 지원
+- React/Vue 컴포넌트 자동 생성
+- TypeScript 인터페이스 생성
+- CSS-in-JS 지원
 
 ### Phase 3 (예정)
 
-- 🌐 웹 UI 대시보드
-- 🔎 실시간 아이콘 검색
-- 👁️ 아이콘 미리보기
+- 웹 UI 대시보드
+- 실시간 아이콘 검색
+- 아이콘 미리보기
 
 ### Phase 4 (예정)
 
-- 🎨 Figma 플러그인
-- 🔄 자동 동기화
+- Figma 플러그인
+- 자동 동기화
 
 ### Phase 5 (예정)
 
-- ☁️ 클라우드 동기화
-- 👥 팀 협업
-- 📊 버전 관리
+- 클라우드 동기화
+- 팀 협업
+- 버전 관리
 
 ---
 
@@ -559,10 +559,10 @@ MIT License - [LICENSE](./LICENSE) 파일 참고
 
 ## 문의 및 지원
 
-- 📚 [상세 문서](https://github.com/seongmin36/icon-shelf/wiki)
-- 🐛 [이슈 제보](https://github.com/seongmin36/icon-shelf/issues)
-- 💬 [토론](https://github.com/seongmin36/icon-shelf/discussions)
+- [상세 문서](https://github.com/seongmin36/icon-shelf/wiki)
+- [이슈 제보](https://github.com/seongmin36/icon-shelf/issues)
+- [토론](https://github.com/seongmin36/icon-shelf/discussions)
 
 ---
 
-**Made with ❤️ for frontend teams**
+**Made for frontend teams**

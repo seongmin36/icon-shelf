@@ -16,6 +16,7 @@ program
   .command('init')
   .description('Initialize icon-shelf config in current directory')
   .option('-s, --scan', 'Run scan immediately after init')
+  .option('-y, --yes', 'Skip interactive prompts and use defaults')
   .action(initCommand);
 
 program

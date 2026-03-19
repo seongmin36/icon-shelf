@@ -64,6 +64,24 @@ function buildCategoryMeta(entries: IconEntry[]): CategoryMeta[] {
     .map(([name, count]) => ({ name, count }));
 }
 
+// ─── 병렬 처리 유틸 ─────────────────────────────────────────
+
+const CONCURRENCY = 16;
+
+async function processInBatches<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  concurrency: number = CONCURRENCY,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency);
+    const batchResults = await Promise.all(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 // ─── Main Registry Generator ────────────────────────────────
 
 export async function generateRegistry(
@@ -72,24 +90,25 @@ export async function generateRegistry(
 ): Promise<IconRegistry> {
   const { config, cwd } = options;
 
+  // configHash 한 번만 계산
+  const configHash = computeConfigHash(config);
+
   // Load cache
   const cachePath = path.resolve(cwd, config.cache.path);
   let cache: ScanCache | null = null;
 
   if (config.cache.enabled) {
     cache = await loadCache(cachePath);
-    const configHash = computeConfigHash(config);
 
     if (cache && (cache.configHash !== configHash || cache.version !== CACHE_VERSION)) {
       cache = null;
     }
   }
 
-  const entries: IconEntry[] = [];
   const newCacheEntries: Record<string, CachedEntry> = {};
-  const configHash = computeConfigHash(config);
 
-  for (const filePath of files) {
+  // 파일 처리를 병렬로 실행 (동시 16개)
+  const results = await processInBatches(files, async (filePath) => {
     const cached = cache?.entries[filePath];
 
     try {
@@ -97,22 +116,18 @@ export async function generateRegistry(
 
       // Stage 1: mtime match
       if (cached && cached.mtime === stat.mtimeMs) {
-        entries.push(cached.iconEntry);
-        newCacheEntries[filePath] = cached;
-        continue;
+        return { entry: cached.iconEntry, cacheEntry: cached };
       }
 
       // Stage 2: content hash match
       const contentHash = await computeContentHash(filePath);
       if (cached && cached.contentHash === contentHash) {
         const updated: CachedEntry = { ...cached, mtime: stat.mtimeMs };
-        entries.push(updated.iconEntry);
-        newCacheEntries[filePath] = updated;
-        continue;
+        return { entry: updated.iconEntry, cacheEntry: updated };
       }
 
-      // Cache miss: full parse
-      const parsed = await parseIconFile(filePath, cwd);
+      // Cache miss: full parse (stat을 넘겨서 중복 호출 방지)
+      const parsed = await parseIconFile(filePath, cwd, stat);
       const ext = path.extname(filePath);
       const baseName = path.basename(filePath, ext);
       const category = resolveCategory(filePath, config, cwd);
@@ -127,16 +142,26 @@ export async function generateRegistry(
         contentHash,
       };
 
-      entries.push(entry);
-      newCacheEntries[filePath] = {
-        path: filePath,
-        mtime: stat.mtimeMs,
-        contentHash,
-        iconEntry: entry,
+      return {
+        entry,
+        cacheEntry: {
+          path: filePath,
+          mtime: stat.mtimeMs,
+          contentHash,
+          iconEntry: entry,
+        } as CachedEntry,
       };
     } catch {
-      // Skip files that can't be read
-      continue;
+      return null;
+    }
+  });
+
+  // 결과 수집
+  const entries: IconEntry[] = [];
+  for (const result of results) {
+    if (result) {
+      entries.push(result.entry);
+      newCacheEntries[result.cacheEntry.path] = result.cacheEntry;
     }
   }
 

@@ -1,8 +1,12 @@
 import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { Packr } from 'msgpackr';
 import type { ScanCache, IconShelfConfig } from './types.js';
 
 export const CACHE_VERSION = '1';
+
+// msgpackr 인스턴스를 한 번만 생성하여 재사용
+const packr = new Packr({ mapsAsObjects: true });
 
 // ─── Content hash ───────────────────────────────────────────
 
@@ -30,8 +34,6 @@ export function computeConfigHash(config: IconShelfConfig): string {
 
 export async function loadCache(cachePath: string): Promise<ScanCache | null> {
   try {
-    const { Packr } = await import('msgpackr');
-    const packr = new Packr({ mapsAsObjects: true });
     const data = await fs.readFile(cachePath);
     return packr.unpack(data) as ScanCache;
   } catch {
@@ -40,8 +42,6 @@ export async function loadCache(cachePath: string): Promise<ScanCache | null> {
 }
 
 export async function saveCache(cachePath: string, cache: ScanCache): Promise<void> {
-  const { Packr } = await import('msgpackr');
-  const packr = new Packr({ mapsAsObjects: true });
   const packed = packr.pack(cache);
   await fs.writeFile(cachePath, packed);
 }

@@ -2,6 +2,7 @@ import { parse as parseSvgString } from 'svg-parser';
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { Stats } from 'node:fs';
 import type { IconEntry, LintWarning } from './types.js';
 
 type ParsedIconPartial = Omit<IconEntry, 'id' | 'category' | 'tags' | 'contentHash'>;
@@ -51,6 +52,19 @@ function parseDimension(value: string | number | undefined): number | null {
   return isNaN(n) ? null : n;
 }
 
+// ─── SVG Preview 경량화 ──────────────────────────────────────
+
+const MAX_PREVIEW_LENGTH = 2048;
+
+function truncateSvgPreview(content: string): string {
+  if (content.length <= MAX_PREVIEW_LENGTH) return content;
+  // SVG 태그 구조를 유지하면서 잘라냄
+  const closingTag = '</svg>';
+  const truncated = content.slice(0, MAX_PREVIEW_LENGTH - closingTag.length);
+  // 마지막 열린 태그를 닫지 않은 채로 자르면 깨지므로 </svg>를 붙임
+  return truncated + closingTag;
+}
+
 // ─── SVG Parser ─────────────────────────────────────────────
 
 async function parseSvgFile(filePath: string): Promise<{
@@ -78,7 +92,7 @@ async function parseSvgFile(filePath: string): Promise<{
       colors: [],
       isAnimated: false,
       lintWarnings: [],
-      preview: content,
+      preview: truncateSvgPreview(content),
     };
   }
 
@@ -97,7 +111,7 @@ async function parseSvgFile(filePath: string): Promise<{
     }
   }
 
-  // Walk AST for colors, animation, styles
+  // Walk AST for colors, animation, styles — 한 번의 순회로 모든 정보 수집
   const colors = new Set<string>();
   let hasCurrentColor = false;
   let isAnimated = false;
@@ -118,21 +132,20 @@ async function parseSvgFile(filePath: string): Promise<{
   walkNodes(root, (node) => {
     if (!node.tagName) return;
 
+    const tagLower = node.tagName.toLowerCase();
+
     // Animation detection
-    if (ANIMATION_TAGS.has(node.tagName.toLowerCase())) {
+    if (ANIMATION_TAGS.has(tagLower)) {
       isAnimated = true;
     }
 
     // Title detection
-    if (node.tagName === 'title' && node === root.children?.[0]) {
-      hasTitle = true;
-    }
-    if (node.tagName === 'title') {
+    if (tagLower === 'title') {
       hasTitle = true;
     }
 
     // Raster image detection
-    if (node.tagName === 'image') {
+    if (tagLower === 'image') {
       const href = node.properties?.href ?? node.properties?.['xlink:href'];
       if (href && !String(href).endsWith('.svg')) {
         hasRasterImage = true;
@@ -228,26 +241,30 @@ async function parseSvgFile(filePath: string): Promise<{
     colors: colorsArr,
     isAnimated,
     lintWarnings,
-    preview: content,
+    preview: truncateSvgPreview(content),
   };
 }
 
-// ─── Raster Image Parser ────────────────────────────────────
+// ─── Raster Image Parser (sharp 파이프라인 통합) ─────────────
 
 async function parseRasterFile(filePath: string): Promise<{
   width: number | null;
   height: number | null;
   preview: string;
 }> {
-  const metadata = await sharp(filePath).metadata();
+  // sharp 인스턴스 1번만 생성하여 메타데이터 + 썸네일 동시 처리
+  const instance = sharp(filePath);
+  const [metadata, thumbnail] = await Promise.all([
+    instance.metadata(),
+    instance
+      .clone()
+      .resize(64, 64, { fit: 'inside' })
+      .png()
+      .toBuffer(),
+  ]);
+
   const width = metadata.width ?? null;
   const height = metadata.height ?? null;
-
-  // Generate base64 thumbnail (64x64)
-  const thumbnail = await sharp(filePath)
-    .resize(64, 64, { fit: 'inside' })
-    .png()
-    .toBuffer();
   const preview = `data:image/png;base64,${thumbnail.toString('base64')}`;
 
   return { width, height, preview };
@@ -276,8 +293,10 @@ export function fileNameToTags(name: string): string[] {
 export async function parseIconFile(
   filePath: string,
   cwd: string,
+  existingStat?: Stats,
 ): Promise<ParsedIconPartial> {
-  const stat = await fs.stat(filePath);
+  // stat을 외부에서 받으면 재사용, 없으면 직접 호출
+  const stat = existingStat ?? await fs.stat(filePath);
   const ext = path.extname(filePath).toLowerCase();
   const baseName = path.basename(filePath, ext);
 
